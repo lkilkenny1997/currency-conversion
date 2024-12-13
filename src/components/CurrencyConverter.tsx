@@ -1,6 +1,6 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowRightLeft } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { getConversion, getCurrencies } from '../api';
 import { useDebounce } from '../hooks/useDebounce';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
@@ -24,7 +24,6 @@ export const CurrencyConverter = () => {
   const [amount, setAmount] = useState<string>('1');
   const [fromCurrency, setFromCurrency] = useState<string>('GBP');
   const [toCurrency, setToCurrency] = useState<string>('EUR');
-  const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
 
   const isMissingConfig =
     !process.env.REACT_APP_CURRENCY_BEACON_API_KEY ||
@@ -36,18 +35,11 @@ export const CurrencyConverter = () => {
     staleTime: 24 * 60 * 60 * 1000, // We can cache this for 24 hours because it's unlikely to change
   });
 
-
   const { data: conversion, isLoading: isConverting } = useQuery({
     queryKey: ['conversion', fromCurrency, toCurrency, amount],
     queryFn: async () => getConversion(fromCurrency, toCurrency, amount),
     enabled: Boolean(amount && fromCurrency && toCurrency) && !isMissingConfig,
   });
-
-  useEffect(() => {
-    if (conversion) {
-      setConvertedAmount(conversion.value);
-    }
-  }, [conversion]);
 
   const debouncedSetAmount = useDebounce((value: string) => {
     setAmount(value);
@@ -88,10 +80,13 @@ export const CurrencyConverter = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle
+            className="flex items-center gap-2"
+            data-testid="currency-converter-title"
+          >
             Currency Converter
           </CardTitle>
-          <CardDescription>
+          <CardDescription data-testid="currency-converter-description">
             Select a currency to convert from and to, and enter an amount to see
             real-time conversion.
           </CardDescription>
@@ -108,12 +103,17 @@ export const CurrencyConverter = () => {
               onChange={handleAmountChange}
               className="w-full"
               aria-label="Amount to convert"
+              data-testid="amount-input"
             />
           </div>
 
           <div className="grid grid-cols-[1fr,auto,1fr] gap-4 items-center">
-            <Select value={fromCurrency} onValueChange={setFromCurrency}>
-              <SelectTrigger>
+            <Select
+              value={fromCurrency}
+              onValueChange={setFromCurrency}
+              data-testid="from-currency-select"
+            >
+              <SelectTrigger data-testid="from-currency-trigger">
                 <SelectValue placeholder="From" />
               </SelectTrigger>
               <SelectContent>
@@ -121,6 +121,7 @@ export const CurrencyConverter = () => {
                   <SelectItem
                     key={`from-${currency.code}`}
                     value={currency.code}
+                    data-testid={`currency-option-${currency.code}`}
                   >
                     {currency.name}
                   </SelectItem>
@@ -132,17 +133,26 @@ export const CurrencyConverter = () => {
               onClick={handleSwapCurrencies}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               aria-label="Swap currencies"
+              data-testid="swap-currencies-button"
             >
               <ArrowRightLeft className="w-4 h-4" />
             </button>
 
-            <Select value={toCurrency} onValueChange={setToCurrency}>
-              <SelectTrigger>
+            <Select
+              value={toCurrency}
+              onValueChange={setToCurrency}
+              data-testid="to-currency-select"
+            >
+              <SelectTrigger data-testid="to-currency-trigger">
                 <SelectValue placeholder="To" />
               </SelectTrigger>
               <SelectContent>
                 {currencies?.map((currency) => (
-                  <SelectItem key={`to-${currency.code}`} value={currency.code}>
+                  <SelectItem
+                    key={`to-${currency.code}`}
+                    value={currency.code}
+                    data-testid={`currency-option-${currency.code}`}
+                  >
                     {currency.name}
                   </SelectItem>
                 ))}
@@ -151,17 +161,23 @@ export const CurrencyConverter = () => {
           </div>
 
           {isConverting ? (
-            <div className="p-4 bg-gray-100 rounded-lg">
+            <div
+              className="p-4 bg-gray-100 rounded-lg"
+              data-testid="converting-indicator"
+            >
               <div className="flex items-center justify-center gap-2">
                 <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
                 <span>Converting...</span>
               </div>
             </div>
           ) : (
-            convertedAmount !== null && (
-              <div className="p-4 bg-gray-100 rounded-lg transition-opacity">
+            conversion?.value !== undefined && (
+              <div
+                className="p-4 bg-gray-100 rounded-lg transition-opacity"
+                data-testid="conversion-result"
+              >
                 <p className="text-lg font-medium text-center">
-                  {amount} {fromCurrency} = {convertedAmount?.toFixed(2)}{' '}
+                  {amount} {fromCurrency} = {conversion.value.toFixed(2)}{' '}
                   {toCurrency}
                 </p>
               </div>
