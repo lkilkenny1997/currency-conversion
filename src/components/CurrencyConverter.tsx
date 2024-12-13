@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import { ApiErrorMessages } from '../constants';
 
 export const CurrencyConverter = () => {
   const [amount, setAmount] = useState<string>('1');
@@ -29,16 +30,21 @@ export const CurrencyConverter = () => {
     !process.env.REACT_APP_CURRENCY_BEACON_API_KEY ||
     !process.env.REACT_APP_CURRENCY_BEACON_API_URL;
 
-  const { data: currencies } = useSuspenseQuery({
+  const { data: currencies, error: currenciesError } = useSuspenseQuery({
     queryKey: ['currencies'],
     queryFn: getCurrencies,
     staleTime: 24 * 60 * 60 * 1000, // We can cache this for 24 hours because it's unlikely to change
   });
 
-  const { data: conversion, isLoading: isConverting } = useQuery({
+  const {
+    data: conversion,
+    isLoading: isConverting,
+    error: conversionError,
+  } = useQuery({
     queryKey: ['conversion', fromCurrency, toCurrency, amount],
     queryFn: async () => getConversion(fromCurrency, toCurrency, amount),
     enabled: Boolean(amount && fromCurrency && toCurrency) && !isMissingConfig,
+    retry: false, 
   });
 
   const debouncedSetAmount = useDebounce((value: string) => {
@@ -92,6 +98,18 @@ export const CurrencyConverter = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {currenciesError && (
+            <Alert variant="destructive" data-testid="currencies-error">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error fetching currencies</AlertTitle>
+              <AlertDescription>
+                {currenciesError instanceof Error
+                  ? currenciesError.message
+                  : ApiErrorMessages.CURRENCIES_FAILED}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-2">
             <label htmlFor="amount" className="text-sm font-medium">
               Amount
@@ -160,6 +178,18 @@ export const CurrencyConverter = () => {
             </Select>
           </div>
 
+          {conversionError && (
+            <Alert variant="destructive" data-testid="conversion-error">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error converting currency</AlertTitle>
+              <AlertDescription>
+                {conversionError instanceof Error
+                  ? conversionError.message
+                  : ApiErrorMessages.CONVERSION_FAILED}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {isConverting ? (
             <div
               className="p-4 bg-gray-100 rounded-lg"
@@ -171,6 +201,7 @@ export const CurrencyConverter = () => {
               </div>
             </div>
           ) : (
+            !conversionError &&
             conversion?.value !== undefined && (
               <div
                 className="p-4 bg-gray-100 rounded-lg transition-opacity"
