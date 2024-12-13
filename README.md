@@ -1,5 +1,35 @@
 # js-interview-assessment
 
+## Setup Instructions
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/lkilkenny1997/currency-conversion
+```
+
+2. **Install dependencies**
+```bash
+yarn
+```
+
+3. **Configure environment variables**
+   - Copy `.env.example` to create a new `.env` file
+   ```bash
+   cp .env.example .env
+   ```
+   - Register for a free account at [currencybeacon.com](https://currencybeacon.com/register)
+   - Find your API key in the dashboard under "API Token Information"
+   - Update your `.env` file with:
+   ```
+   REACT_APP_CURRENCY_BEACON_API_URL=https://api.currencybeacon.com/v1
+   REACT_APP_CURRENCY_BEACON_API_KEY=your_api_key_here
+   ```
+
+4. **Start the development server**
+```bash
+yarn start
+```
+
 ## Project Overview:
 Your task is to create a simple currency conversion tool similar to that which can be found on Google. 
 
