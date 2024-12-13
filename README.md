@@ -59,3 +59,46 @@ We understand and appreciate that tools like GitHub Copilot have become valuable
 - Please ensure that your project is self-contained and can be easily set up and run by the evaluation team.
 - If you have any questions or need clarification on the requirements, feel free to reach out for assistance. Good luck!
 - Please refrain from using tools like GitHub Copilot.
+
+## Technical Implementation Details
+
+### Key Technical Decisions
+
+1. **React / TypeScript**
+   - My favourite frontend framework and TypeScript is an industry standard and a must.
+
+2. **TanStack Query (React Query)**
+   - Probably the best package for any React project, especially for data fetching and caching. So much out of the box functionality.
+     - Built-in caching mechanism
+     - Automatic background refetching
+     - Loading and error states management
+     - Optimistic updates
+
+3. **UI Components**
+   - Utilised shadcn/ui component library
+     - Built on Radix UI for robust accessibility
+     - Customisable through Tailwind CSS
+   - Custom skeleton components for loading states
+   - Responsive design implementation
+
+### Project Structure
+
+```
+src/
+  api/           # API integration layer
+  components/    # UI components
+    ui/          # shadcn/ui components
+  constants/     # Application constants
+  css/          # Global styles
+  hooks/        # Custom React hooks
+  lib/          # Utility functions
+  types/        # TypeScript types
+```
+
+### Dependencies and Their Purpose
+
+- `@tanstack/react-query`: Server state management and data fetching
+- `@radix-ui/react-select`: Accessible select components
+- `class-variance-authority`: Dynamic className construction
+- `tailwindcss`: Utility-first CSS framework
+- `jest` & `@testing-library/react`: Testing infrastructure
