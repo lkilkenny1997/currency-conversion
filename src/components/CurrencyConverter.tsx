@@ -44,7 +44,7 @@ export const CurrencyConverter = () => {
     queryKey: ['conversion', fromCurrency, toCurrency, amount],
     queryFn: async () => getConversion(fromCurrency, toCurrency, amount),
     enabled: Boolean(amount && fromCurrency && toCurrency) && !isMissingConfig,
-    retry: false, 
+    retry: false,
   });
 
   const debouncedSetAmount = useDebounce((value: string) => {
@@ -135,15 +135,17 @@ export const CurrencyConverter = () => {
                 <SelectValue placeholder="From" />
               </SelectTrigger>
               <SelectContent>
-                {currencies?.map((currency) => (
-                  <SelectItem
-                    key={`from-${currency.code}`}
-                    value={currency.code}
-                    data-testid={`currency-option-${currency.code}`}
-                  >
-                    {currency.name}
-                  </SelectItem>
-                ))}
+                {currencies
+                  ?.sort((a, b) => a.name.localeCompare(b.name))
+                  .map((currency) => (
+                    <SelectItem
+                      key={`from-${currency.code}`}
+                      value={currency.code}
+                      data-testid={`currency-option-${currency.code}`}
+                    >
+                      {currency.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
 
@@ -165,15 +167,17 @@ export const CurrencyConverter = () => {
                 <SelectValue placeholder="To" />
               </SelectTrigger>
               <SelectContent>
-                {currencies?.map((currency) => (
-                  <SelectItem
-                    key={`to-${currency.code}`}
-                    value={currency.code}
-                    data-testid={`currency-option-${currency.code}`}
-                  >
-                    {currency.name}
-                  </SelectItem>
-                ))}
+                {currencies
+                  ?.sort((a, b) => a.name.localeCompare(b.name))
+                  .map((currency) => (
+                    <SelectItem
+                      key={`to-${currency.code}`}
+                      value={currency.code}
+                      data-testid={`currency-option-${currency.code}`}
+                    >
+                      {currency.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
