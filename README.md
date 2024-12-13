@@ -1,4 +1,4 @@
-# js-interview-assessment
+# React Currency Conversion
 
 ## Setup Instructions
 
