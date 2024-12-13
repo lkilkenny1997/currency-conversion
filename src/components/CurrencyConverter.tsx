@@ -1,7 +1,8 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowRightLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { getConversion, getCurrencies } from '../api';
+import { useDebounce } from '../hooks/useDebounce';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import {
   Card,
@@ -29,10 +30,12 @@ export const CurrencyConverter = () => {
     !process.env.REACT_APP_CURRENCY_BEACON_API_KEY ||
     !process.env.REACT_APP_CURRENCY_BEACON_API_URL;
 
- const { data: currencies } = useSuspenseQuery({
+  const { data: currencies } = useSuspenseQuery({
     queryKey: ['currencies'],
     queryFn: getCurrencies,
+    staleTime: 24 * 60 * 60 * 1000, // We can cache this for 24 hours because it's unlikely to change
   });
+
 
   const { data: conversion, isLoading: isConverting } = useQuery({
     queryKey: ['conversion', fromCurrency, toCurrency, amount],
@@ -46,17 +49,24 @@ export const CurrencyConverter = () => {
     }
   }, [conversion]);
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setAmount(value);
-    }
-  };
+  const debouncedSetAmount = useDebounce((value: string) => {
+    setAmount(value);
+  }, 500);
 
-  const handleSwapCurrencies = () => {
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        debouncedSetAmount(value);
+      }
+    },
+    [debouncedSetAmount]
+  );
+
+  const handleSwapCurrencies = useCallback(() => {
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
-  };
+  }, [fromCurrency, toCurrency]);
 
   if (isMissingConfig) {
     return (
@@ -94,7 +104,7 @@ export const CurrencyConverter = () => {
             <Input
               id="amount"
               type="number"
-              value={amount}
+              defaultValue={amount}
               onChange={handleAmountChange}
               className="w-full"
               aria-label="Amount to convert"
@@ -112,7 +122,7 @@ export const CurrencyConverter = () => {
                     key={`from-${currency.code}`}
                     value={currency.code}
                   >
-                    {currency.code} - {currency.name}
+                    {currency.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -133,7 +143,7 @@ export const CurrencyConverter = () => {
               <SelectContent>
                 {currencies?.map((currency) => (
                   <SelectItem key={`to-${currency.code}`} value={currency.code}>
-                    {currency.code} - {currency.name}
+                    {currency.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -147,15 +157,20 @@ export const CurrencyConverter = () => {
                 <span>Converting...</span>
               </div>
             </div>
-          ) : convertedAmount !== null && (
-            <div className="p-4 bg-gray-100 rounded-lg transition-opacity">
-              <p className="text-lg font-medium text-center">
-                {amount} {fromCurrency} = {convertedAmount?.toFixed(2)} {toCurrency}
-              </p>
-            </div>
+          ) : (
+            convertedAmount !== null && (
+              <div className="p-4 bg-gray-100 rounded-lg transition-opacity">
+                <p className="text-lg font-medium text-center">
+                  {amount} {fromCurrency} = {convertedAmount?.toFixed(2)}{' '}
+                  {toCurrency}
+                </p>
+              </div>
+            )
           )}
         </CardContent>
       </Card>
     </div>
   );
 };
+
+export default CurrencyConverter;
